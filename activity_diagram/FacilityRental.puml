@@ -18,12 +18,8 @@ repeat
     ' The website checks if the facility is available
     |Website|
     :Check availability;
-    ' If the facility is not available, the website tells the renter. The renter may choose a different date or stop.
-    if (Facility available?) then ([not available])
-        |Website|
-        :Show not available;
     ' If the facility is available, the renter enters contact information and submits the request.
-    else ([available])
+    if (Facility available?) then ([available])
         |Renter|
         :Enter contact info;
         :Submit request;
@@ -39,9 +35,11 @@ repeat
         if (Staff decision?) then ([rejected])
             |Website|
             :Record rejection;
+            -[#Red]->
 
             |Email Service|
             :Send rejection email;
+            -[#Red]->
 
             |Renter|
             :Receive rejection email;
@@ -59,9 +57,11 @@ repeat
             if (Payment result?) then ([payment fails])
                 |Website|
                 :Record payment failure;
+                -[#DarkOrange]->
 
                 |Email Service|
                 :Send payment failed email;
+                -[#DarkOrange]->
 
                 |Renter|
                 :Receive payment failed email;
@@ -71,9 +71,11 @@ repeat
             else ([payment succeeds])
                 |Website|
                 :Save booking;
+                -[#Green]->
 
                 |Email Service|
                 :Send confirmation email;
+                -[#Green]->
 
                 |Renter|
                 :Receive confirmation;
@@ -81,6 +83,10 @@ repeat
                 stop
             endif
         endif
+    ' If the facility is not available, the website tells the renter. The renter may choose a different date or stop.
+    else ([not available])
+        |Website|
+        :Show not available;
     endif
     |Renter|
 repeat while (Choose a different date?) is ([yes]) not ([no])
