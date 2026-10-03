@@ -1,0 +1,75 @@
+@startuml
+
+title School Facility Rental - Sequence
+
+' Declare actors and participants
+actor Renter
+participant Website
+participant "School Staff" as Staff
+participant "Payment Service" as PayService
+participant "Email Service" as Email
+
+' The renter submits an available facility request
+Renter -> Website: submit request
+
+activate Website
+Website -> Website: check availability
+note right of Website: [available]
+Website -> Website: create request
+' School Staff reviews the request. Staff may approve or reject it.
+Website -> Staff: send request for review
+activate Staff
+Staff -> Staff: review request
+
+' If staff approves the request, the Payment Service charges the renter.
+alt approved
+    Staff --> Website: approved
+    deactivate Staff
+
+    Website -> PayService: process payment
+    activate PayService
+
+    alt payment failure
+        ' If payment fails, the website records the failure and sends an email to the renter.
+        PayService --> Website: payment fails
+        deactivate PayService
+
+        Website -> Website: record payment failure
+        Website -> Email: send payment failed email
+
+        activate Email
+        Email ->> Renter: payment failed email
+        deactivate Email
+    else payment success
+        ' If payment succeeds, the website saves the booking and sends a confirmation email.
+        activate PayService
+        PayService --> Website: payment succeeds
+        deactivate PayService
+
+        Website -> Website: save booking
+        Website -> Email: send confirmation email
+
+        activate Email
+        Email ->> Renter: confirmation email
+        deactivate Email
+
+        Website --> Renter: booking confirmed
+    end
+
+else rejected
+    ' If staff rejects the request, the website records the rejection and sends an email to the renter.
+    activate Staff
+    Staff --> Website: rejected
+    deactivate Staff
+
+    Website -> Website: record rejection
+    Website -> Email: send rejection email
+
+    activate Email
+    Email ->> Renter: rejection email
+    deactivate Email
+end
+
+deactivate Website
+
+@enduml
