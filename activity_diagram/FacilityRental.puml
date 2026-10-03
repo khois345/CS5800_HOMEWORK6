@@ -1,0 +1,91 @@
+@startuml
+
+title School Facility Rental - Activity
+
+' Show swimlanes
+|Renter|
+|Website|
+|School Staff|
+|Email Service|
+|Payment Service|
+
+' The renter selects a facility, date, time, and event type
+|Renter|
+start
+repeat
+    :Select a facility, date, time, and event type;
+
+    ' The website checks if the facility is available
+    |Website|
+    :Check availability;
+    ' If the facility is not available, the website tells the renter. The renter may choose a different date or stop.
+    if (Facility available?) then ([not available])
+        |Website|
+        :Show not available;
+    ' If the facility is available, the renter enters contact information and submits the request.
+    else ([available])
+        |Renter|
+        :Enter contact info;
+        :Submit request;
+
+        |Website|
+        :Create request;
+        :Send request for review;
+
+        ' School Staff reviews the request. Staff may approve or reject it.
+        |School Staff|
+        :Review request;
+        ' If staff rejects the request, the website records the rejection and sends an email to the renter.
+        if (Staff decision?) then ([rejected])
+            |Website|
+            :Record rejection;
+
+            |Email Service|
+            :Send rejection email;
+
+            |Renter|
+            :Receive rejection email;
+            note right: End: rejected
+            stop
+        ' If staff approves the request, the Payment Service charges the renter.
+        else ([approved])
+            |Website|
+            :Request payment;
+
+            |Payment Service|
+            :Process payment;
+
+            ' If payment fails, the website records the failure and sends an email to the renter.
+            if (Payment result?) then ([payment fails])
+                |Website|
+                :Record payment failure;
+
+                |Email Service|
+                :Send payment failed email;
+
+                |Renter|
+                :Receive payment failed email;
+                note right: End: payment failed
+                stop
+            ' If payment succeeds, the website saves the booking and sends a confirmation email.
+            else ([payment succeeds])
+                |Website|
+                :Save booking;
+
+                |Email Service|
+                :Send confirmation email;
+
+                |Renter|
+                :Receive confirmation;
+                note right: End: booking confirmed
+                stop
+            endif
+        endif
+    endif
+    |Renter|
+repeat while (Choose a different date?) is ([yes]) not ([no])
+:Stop search;
+note right: End: renter stops
+stop
+
+@enduml
